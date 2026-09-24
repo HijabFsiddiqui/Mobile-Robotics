@@ -1,1 +1,17 @@
-
+error
+Package 'first_package' not found
+(no other error shown by colcon build, which reported success)
+What I did, in order
+Checked for any errors in publisher and subscriber python files.
+Confirmed underlay (/opt/ros/jazzy/setup.bash) wasn't sourced at all originally → fixed that, but problem persisted.
+Rebuilt clean (rm -rf build install log && colcon build) → no change.
+From this point onwards i used AI for debugging gave it the errors and log files to figure out what might me the issue
+Checked build log (log/latest_build/.../stdout_stderr.log) → showed only plain setup.py install steps (egg_info, build_py, install_scripts), no ament_package() post-processing step ever ran.
+Checked colcon's package identification step directly with colcon list --packages-select first_package → returned (python) instead of (ament_python) which meant colcon wasn't recognizing it as a ROS package at all, so it silently fell back to a plain Python build.
+Ran colcon --log-level debug list gave it to claude and the error was a single stray character (s) after </package> in package.xml, left over from an editing mistake, made the file invalid XML. Colcon's XML parser failed silently, fell back to identifying the package as plain Python , which meant ament_package() never ran, no ament_prefix_path environment hook was ever generated, and the package could never register with ros2 pkg list / ros2 run even though the build itself "succeeded."
+Fix
+ Rewrote package.xml cleanly with no trailing content after </package>. Confirmed with colcon list --packages-select first_package → now correctly showed (ros.ament_python). Rebuilt, re-sourced, and ros2 pkg list / ros2 run worked immediately.
+Time lost
+Sadly a lot 
+Lesson for next time
+ When colcon build succeeds but ros2 pkg list/ros2 run can't find the package, check colcon list --packages-select <pkg> early  if it doesn't say (ament_python) or (ament_cmake), something is preventing ROS package identification, and colcon --log-level debug list will usually show exactly why in the first few lines.
