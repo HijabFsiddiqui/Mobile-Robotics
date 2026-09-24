@@ -1,0 +1,13 @@
+Question 2 part e:
+ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.7854}}"
+
+# 2. Drive straight at 2 m/s (keep republishing so it doesn't stop after 1 s)
+ros2 topic pub --rate 10 /turtle1/cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+  
+ros2 topic list # shows /turtle1/pose
+ros2 topic info /turtle1/pose # type: turtlesim/msg/Pose
+ros2 interface show turtlesim/msg/Pose # fields: x, y, theta, linear_velocity, angular_velocity
+ros2 topic echo /turtle1/pose
+ros2 topic echo --once /turtle1/pose
